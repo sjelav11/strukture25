@@ -35,8 +35,8 @@ Person* createPerson(const char* firstName, const char* lastName, int birthYear)
 void addAtBeginning(Person** head, const char* firstName, const char* lastName, int birthYear) {
     Person* newPerson = createPerson(firstName, lastName, birthYear);
     if (!newPerson) return;
-    newPerson->next = *head;
-    *head = newPerson;
+    newPerson->next = *head; //novo stvorena osoba pokazuje na početak liste
+    *head = newPerson; //micanje glave liste da pokazuje na novu osobu
 }
 
 // B) Ispis liste
@@ -54,19 +54,19 @@ void addAtEnd(Person** head, const char* firstName, const char* lastName, int bi
     if (!newPerson) return;
 
     if (*head == NULL) {
-        *head = newPerson;
+        *head = newPerson; //ako je lista prazna nova osoba postaje prva
         return;
     }
 
     Person* temp = *head;
-    while (temp->next != NULL)
+    while (temp->next != NULL) //krećemo od početka dok ne nađemo zadnju osobu
         temp = temp->next;
-    temp->next = newPerson;
+    temp->next = newPerson; //povezujemo zadnju osobu sa novom
 }
 
 // D) Pronalazak osobe po prezimenu
 Person* findByLastName(Person* head, const char* lastName) {
-    Person* temp = head;
+    Person* temp = head; //kreće od početka tj head
     while (temp != NULL) {
         if (strcmp(temp->lastName, lastName) == 0)
             return temp;
@@ -93,9 +93,9 @@ void deleteByLastName(Person** head, const char* lastName) {
     if (prev == NULL)
         *head = temp->next;  
     else
-        prev->next = temp->next;  
+        prev->next = temp->next;  //kada pronađe osobu sa tim prezimenom preskače je
 
-    free(temp);
+    free(temp); //oslobađanje memorije
 }
 
 
