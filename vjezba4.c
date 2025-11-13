@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
+(VEZANA LISTA I BUBBLE SORT MAKNUT)
 typedef struct {
     float coef;
     int exp;
