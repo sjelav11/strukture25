@@ -1,0 +1,15 @@
+# Novi račun
+2024-01-05
+Kruh,2,1.20
+Mlijeko,1,1.50
+Sok,1,2.20
+
+# Novi račun
+2024-01-10
+Kruh,3,1.30
+Sok,2,2.20
+
+# Novi račun
+2024-02-01
+Cokolada,4,1.80
+Kruh,1,1.40
