@@ -1,155 +1,131 @@
+#define_CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <math.h>
-(VEZANA LISTA I BUBBLE SORT MAKNUT)
-typedef struct {
-    float coef;
+
+typedef struct Node {
+    int coef;
     int exp;
-} Term;
+    struct Node *next;
+} Node;
 
-void sortiraj(Term *p, int n) {
-    for (int i = 0; i < n - 1; i++)
-        for (int j = i + 1; j < n; j++)
-            if (p[i].exp < p[j].exp) {
-                Term tmp = p[i];
-                p[i] = p[j];
-                p[j] = tmp;
-            }
-}
+typedef Node* Position;
 
-Term *ucitajPolinom(FILE *f, int *n) {
-    char linija[256];
-    *n = 0;
-    Term *p = NULL;
+Position InsertSorted(Position head, int coef, int exp) {
+    Position newNode, p = head, prev = NULL;
 
-    if (!fgets(linija, sizeof(linija), f))  // pročitaj jedan red (jedan polinom)
-        return NULL;
+    if (coef == 0) return head;
 
-    char *tok = strtok(linija, " \t\n");
-    while (tok) {
-        float c = atof(tok);
-        tok = strtok(NULL, " \t\n");
-        if (!tok) break; // nema eksponenta
-        int e = atoi(tok);
-
-        p = realloc(p, (*n + 1) * sizeof(Term));
-        p[*n].coef = c;
-        p[*n].exp = e;
-        (*n)++;
-
-        tok = strtok(NULL, " \t\n");
+    while (p != NULL && p->exp > exp) {
+        prev = p;
+        p = p->next;
     }
 
-    return p;
+    if (p != NULL && p->exp == exp) {
+        p->coef += coef;
+
+        if (p->coef == 0) {
+            if (prev) prev->next = p->next;
+            else head = p->next;
+            free(p);
+        }
+        return head;
+    }
+
+    newNode = (Position)malloc(sizeof(Node));
+    newNode->coef = coef;
+    newNode->exp = exp;
+    newNode->next = p;
+
+    if (prev == NULL)
+        head = newNode;
+    else
+        prev->next = newNode;
+
+    return head;
 }
 
-void ispisi(Term *p, int n) {
-    for (int i = 0; i < n; i++) {
-        if (fabs(p[i].coef) < 1e-6) continue;
-        if (i > 0 && p[i].coef > 0) printf(" + ");
-        else if (p[i].coef < 0) printf(" - ");
-        printf("%.f*x^%d", fabs(p[i].coef), p[i].exp);
+Position LoadPolynomial(Position P, FILE *fp) {
+    int c, e;
+    while (fscanf(fp, "%d %d", &c, &e) == 2) {
+        P = InsertSorted(P, c, e);
+        if (fgetc(fp) == '\n') break;
     }
+    return P;
+}
+
+Position Add(Position P, Position Q) {
+    Position R = NULL;
+
+    while (P) {
+        R = InsertSorted(R, P->coef, P->exp);
+        P = P->next;
+    }
+    while (Q) {
+        R = InsertSorted(R, Q->coef, Q->exp);
+        Q = Q->next;
+    }
+
+    return R;
+}
+
+
+Position Multiply(Position P, Position Q) {
+    Position R = NULL, qtemp;
+
+    while (P) {
+        qtemp = Q;
+        while (qtemp) {
+            R = InsertSorted(R, P->coef * qtemp->coef, P->exp + qtemp->exp);
+            qtemp = qtemp->next;
+        }
+        P = P->next;
+    }
+
+    return R;
+}
+
+int PrintPoly(Position P) {
+    if (!P) {
+        printf("0\n");
+        return 0;
+    }
+
+    while (P) {
+        printf("%dx^%d", P->coef, P->exp);
+        if (P->next) printf(" + ");
+        P = P->next;
+    }
+
     printf("\n");
-}
-
-Term *zbroji(Term *p1, int n1, Term *p2, int n2, int *nz) {
-    Term *rez = NULL;
-    int i = 0, j = 0;
-    *nz = 0;
-
-    while (i < n1 && j < n2) {
-        Term novi;
-        if (p1[i].exp > p2[j].exp) novi = p1[i++];
-        else if (p1[i].exp < p2[j].exp) novi = p2[j++];
-        else {
-            novi.exp = p1[i].exp;
-            novi.coef = p1[i].coef + p2[j].coef;
-            i++; j++;
-        }
-        rez = realloc(rez, (*nz + 1) * sizeof(Term));
-        rez[*nz] = novi;
-        (*nz)++;
-    }
-
-    while (i < n1) {
-        rez = realloc(rez, (*nz + 1) * sizeof(Term));
-        rez[*nz] = p1[i++];
-        (*nz)++;
-    }
-
-    while (j < n2) {
-        rez = realloc(rez, (*nz + 1) * sizeof(Term));
-        rez[*nz] = p2[j++];
-        (*nz)++;
-    }
-
-    return rez;
-}
-
-Term *pomnozi(Term *p1, int n1, Term *p2, int n2, int *nm) {
-    Term *rez = NULL;
-    *nm = 0;
-
-    for (int i = 0; i < n1; i++) {
-        for (int j = 0; j < n2; j++) {
-            int exp = p1[i].exp + p2[j].exp;
-            float coef = p1[i].coef * p2[j].coef;
-
-            int found = 0;
-            for (int k = 0; k < *nm; k++) {
-                if (rez[k].exp == exp) {
-                    rez[k].coef += coef;
-                    found = 1;
-                    break;
-                }
-            }
-            if (!found) {
-                rez = realloc(rez, (*nm + 1) * sizeof(Term));
-                rez[*nm].exp = exp;
-                rez[*nm].coef = coef;
-                (*nm)++;
-            }
-        }
-    }
-
-    sortiraj(rez, *nm);
-    return rez;
+    return 0;
 }
 
 int main() {
-    FILE *f = fopen("polinomi.txt", "r");
-    if (!f) {
-        printf("Greska pri otvaranju datoteke!\n");
-        return 1;
+    Position P1 = NULL, P2 = NULL, Sum = NULL, Product = NULL;
+    FILE *fp = fopen("polinomi.txt","r");
+
+    if (!fp) {
+        printf("Error opening file!\n");
+        return -1;
     }
 
-    int n1, n2, nz, nm;
-    Term *p1 = ucitajPolinom(f, &n1);
-    Term *p2 = ucitajPolinom(f, &n2);
-    fclose(f);
+    P1 = LoadPolynomial(P1, fp);
+    P2 = LoadPolynomial(P2, fp);
+    fclose(fp);
 
-    if (!p1 || !p2) {
-        printf("Greska: ne mogu ucitati polinome!\n");
-        return 1;
-    }
+    printf("Polynomial 1: ");
+    PrintPoly(P1);
 
-    sortiraj(p1, n1);
-    sortiraj(p2, n2);
+    printf("Polynomial 2: ");
+    PrintPoly(P2);
 
-    printf("P1(x) = "); ispisi(p1,n1);
-    printf("P2(x) = "); ispisi(p2, n2);
+    Sum = Add(P1, P2);
+    printf("\nSum: ");
+    PrintPoly(Sum);
 
-    Term *zbroj = zbroji(p1, n1, p2, n2, &nz);
-    Term *umnozak = pomnozi(p1, n1, p2, n2, &nm);
+    Product = Multiply(P1, P2);
+    printf("Product: ");
+    PrintPoly(Product);
 
-    printf("\nZbroj: "); ispisi(zbroj, nz);
-    printf("Umnozak: "); ispisi(umnozak, nm);
-
-    free(p1);
-    free(p2);
-    free(zbroj);
-    free(umnozak);
     return 0;
 }
