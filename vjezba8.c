@@ -39,6 +39,12 @@ Node* find(Node *root, int el) {
         return find(root->right, el);
 }
 
+Node* findMin(Node *root) {
+    while (root && root->left)
+        root = root->left;
+    return root;
+}
+
 /*Brisanje elementa */
 Node* delete(Node *root, int el) {
     if (root == NULL)
