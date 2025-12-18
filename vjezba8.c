@@ -128,7 +128,6 @@ int main() {
     int choice, value;
 
     while (1) {
-        printf("\n--- BST MENU ---\n");
         printf("1 - Insert element\n");
         printf("2 - Find element\n");
         printf("3 - Delete element\n");
